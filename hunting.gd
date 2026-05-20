@@ -3,13 +3,13 @@ class_name TopDownHuntingBehaviour
 
 var mover : TopDownMovement
 var direction : Vector2 = Vector2.RIGHT
-@export var prey : Node2D
-@export var view_radius : float = 300.0
-@export var view_angle : float = 360.0
-@export var speed : float = 100.0
-@export var max_sight_chain : int = 3
-@export var enable_wander_off : bool = true
-@export var wander_duration : float = 1.5
+@export var prey : Node2D ## The target node this enemy will hunt
+@export var view_radius : float = 300.0 ## Maximum distance at which the enemy can see the prey
+@export var view_angle : float = 360.0 ## Field-of-view cone in degrees (360 = omnidirectional)
+@export var speed : float = 100.0 ## Movement speed passed to the TopDownMovement component
+@export var max_sight_chain : int = 3 ## Number of ray-cast waypoints built when sight is lost (higher = smarter pathing around obstacles)
+@export var enable_wander_off : bool = true ## If true, enemy wanders briefly before returning to its previous state when it loses sight
+@export var wander_duration : float = 1.5 ## How many seconds the enemy continues in the last-known direction before giving up
 var last_known_position : Vector2 = Vector2.ZERO
 var has_seen_player : bool = false
 var _waypoint_chain : Array[Vector2] = []
@@ -60,7 +60,7 @@ func _cast_ray(from: Vector2, to: Vector2, extra_exclude: Array = []) -> Diction
 	query.exclude = exclude
 	return space_state.intersect_ray(query)
 
-func can_see_player() -> bool:
+func can_see_player() -> bool: ## Returns true if prey is within view_radius, inside the view_angle cone, and not blocked by geometry
 	if prey == null:
 		return false
 
@@ -127,7 +127,7 @@ func _start_wander_off():
 	_wandering_off = true
 	_wander_start_time = Time.get_ticks_msec() / 1000.0
 
-func process_behaviour():
+func process_behaviour(): ## Each frame: pursue prey when visible, follow waypoints when sight is lost, wander off when chain exhausted
 	if prey == null:
 		on = false
 		return
