@@ -18,6 +18,12 @@ an addon to create hunting behaviour on a node
 | **enable_wander_off** | `bool` | `true` | If true, enemy wanders briefly before returning to its previous state when it loses sight |
 | **wander_duration** | `float` | `1.5` | How many seconds the enemy continues in the last-known direction before giving up |
 
+### 🔔 Signals
+| Signal | Arguments | Description |
+| :--- | :--- | :--- |
+| **prey_spotted** | `prey: Node2D` |  Emitted when the enemy first gains line-of-sight to the prey |
+| **prey_lost** | `last_known_position: Vector2` |  Emitted when the enemy loses sight and begins wandering |
+
 ### 🛠️ Methods
 | Method | Arguments | Returns | Description |
 | :--- | :--- | :--- | :--- |

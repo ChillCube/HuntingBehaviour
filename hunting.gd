@@ -1,8 +1,12 @@
 extends State
 class_name TopDownHuntingBehaviour
 
+signal prey_spotted(prey: Node2D) ## Emitted when the enemy first gains line-of-sight to the prey
+signal prey_lost(last_known_position: Vector2) ## Emitted when the enemy loses sight and begins wandering
+
 var mover : TopDownMovement
 var direction : Vector2 = Vector2.RIGHT
+var _was_seeing_prey: bool = false
 @export var prey : Node2D ## The target node this enemy will hunt
 @export var view_radius : float = 300.0 ## Maximum distance at which the enemy can see the prey
 @export var view_angle : float = 360.0 ## Field-of-view cone in degrees (360 = omnidirectional)
@@ -119,6 +123,8 @@ func _move_toward(target: Vector2):
 	mover.request_movement(direction)
 
 func _start_wander_off():
+	prey_lost.emit(last_known_position)
+	_was_seeing_prey = false
 	if not enable_wander_off:
 		mover.request_movement(Vector2.ZERO)
 		has_seen_player = false
@@ -134,6 +140,11 @@ func process_behaviour(): ## Each frame: pursue prey when visible, follow waypoi
 	if mover == null:
 		return
 
+	var currently_seeing = can_see_player()
+	if currently_seeing and not _was_seeing_prey:
+		prey_spotted.emit(prey)
+	_was_seeing_prey = currently_seeing
+
 	if _wandering_off:
 		if Time.get_ticks_msec() / 1000.0 - _wander_start_time >= wander_duration:
 			_wandering_off = false
@@ -145,7 +156,7 @@ func process_behaviour(): ## Each frame: pursue prey when visible, follow waypoi
 		mover.request_movement(direction)
 		return
 
-	if can_see_player():
+	if currently_seeing:
 		last_known_position = prey.global_position
 		has_seen_player = true
 		_chain_built = false
